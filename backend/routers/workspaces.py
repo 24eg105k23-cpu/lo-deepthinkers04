@@ -80,6 +80,34 @@ def get_workspace_details(workspace_id: str, user: User = Depends(get_current_us
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/user/papers")
+def get_all_user_papers(user: User = Depends(get_current_user)):
+    """
+    Get ALL papers for the current user across all workspaces.
+    """
+    try:
+        print(f"DEBUG: get_all_user_papers called for user_id: {user.id}")
+        
+        # 1. Fetch all workspaces for the user (for map)
+        workspaces_res = supabase.table("workspaces").select("id, name").eq("user_id", user.id).execute()
+        workspace_map = {w['id']: w['name'] for w in workspaces_res.data}
+        print(f"DEBUG: Found {len(workspace_map)} workspaces for user")
+        
+        # 2. Fetch all papers
+        papers_res = supabase.table("rag_files").select("*").eq("user_id", user.id).order("created_at", desc=True).execute()
+        print(f"DEBUG: Found {len(papers_res.data)} papers for user")
+        
+        # 3. Enrich papers
+        results = []
+        for p in papers_res.data:
+            p['workspace_name'] = workspace_map.get(p['workspace_id'], 'Unknown Workspace')
+            results.append(p)
+            
+        return results
+    except Exception as e:
+        logger.error(f"Error fetching user papers: {e}") 
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/{workspace_id}/papers")
 def get_workspace_papers(workspace_id: str, user: User = Depends(get_current_user)):
     """
