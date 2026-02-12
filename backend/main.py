@@ -26,4 +26,5 @@ app.include_router(workspaces.router)
 
 @app.get("/")
 def read_root():
+    print("DEBUG: Root endpoint accessed", flush=True)
     return {"message": "Welcome to the API"}
