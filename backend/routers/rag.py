@@ -5,7 +5,7 @@ from dependencies import get_current_user, User
 from utils.pdf_loader import load_paper_from_bytes
 from utils.chunker import prepare_chunks
 from utils.vector_store import SupabaseVectorStore
-# from utils.rag import InMemoryRAG # Obsolete
+from utils.rag import InMemoryRAG # We will modify this class or create a new one to use VectorStore
 import logging
 
 logger = logging.getLogger(__name__)
@@ -160,78 +160,80 @@ async def upload_document(
 @router.post("/chat")
 async def chat(
     request: ChatRequest,
-    user: User = Depends(get_current_user) # DEBUG: Auth disabled
+    user: User = Depends(get_current_user)
 ):
-    import time
-    start_time = time.time()
-    print(f"[{time.time()}] DEBUG: Request received", flush=True)
-    
-    # class MockUser:
-    #     id = "test_user_id"
-    # user = MockUser()
-
     """
     Chat with documents in a workspace using RAG
     """
     try:
-        print(f"[{time.time()}] DEBUG: Processing chat request for workspace {request.workspace_id}", flush=True)
+        print(f"DEBUG: Processing chat request for workspace {request.workspace_id}")
         
         # 1. Embed Question with Boosting (Matches utils/rag.py logic)
         retrieval_query = (
             "Main contribution, key idea, novelty, and core method of the paper. "
             f"Question: {request.question}"
         )
-        print(f"[{time.time()}] DEBUG: Encoding query...", flush=True)
         query_embedding = embedder.encode(retrieval_query).tolist()
-        print(f"[{time.time()}] DEBUG: Embedding complete", flush=True)
+        print("DEBUG: Embedding complete")
         
         # 2. Retrieve Similar Chunks (Scoped to User)
-        print(f"[{time.time()}] DEBUG: Searching vector store...", flush=True)
         similar_chunks = vector_store.similarity_search(
             user_id=user.id,
             query_embedding=query_embedding,
             top_k=5,
             workspace_id=request.workspace_id,
-            match_threshold=0.1
+            match_threshold=0.1  # Lowered for better vague query handling
         )
-        print(f"[{time.time()}] DEBUG: Retrieved {len(similar_chunks)} chunks", flush=True)
+        print(f"DEBUG: Retrieved {len(similar_chunks)} chunks")
         
         if not similar_chunks:
              return {"answer": "No relevant documents found in this workspace.", "sources": []}
         
-        # 3. Context Construction
+        # 3. Context Construction (Prioritize Abstract)
+        # Parse metadata to find abstract
         context_parts = []
         abstract_chunk = None
+        
+        # Check for abstract in retrieved chunks
         for chunk in similar_chunks:
             meta = chunk.get("metadata", {})
             if meta.get("type") == "abstract":
                 abstract_chunk = chunk
                 break
         
+        # If abstract found and prioritized
         if abstract_chunk:
-            context_parts.append(f"=== ABSTRACT ===\n{abstract_chunk['chunk_text']}\n")
+            context_parts.append(f"=== ABSTRACT (MOST IMPORTANT) ===\n{abstract_chunk['chunk_text']}\n")
             
+        # Add other chunks
         for i, chunk in enumerate(similar_chunks, 1):
-             if chunk != abstract_chunk:
-                context_parts.append(f"[Section {i}]:\n{chunk['chunk_text']}\n")
+            meta = chunk.get("metadata", {})
+            if meta.get("type") != "abstract": # Avoid duplicate abstract
+                chunk_type = meta.get("type", "body")
+                context_parts.append(f"[Section {i} - {chunk_type}]:\n{chunk['chunk_text']}\n")
 
         context_text = "\n".join(context_parts)
         
-        # 4. Generate Answer
+        # 4. Generate Answer (Strict System Prompt)
         from utils.gemini_client import generate_response
         
-        print(f"[{time.time()}] DEBUG: Calling Gemini API...", flush=True)
+        system_prompt = (
+            "You are a research assistant. "
+            "Answer questions using ONLY the provided paper content. "
+            "You may synthesize information across sections to infer: "
+            "the problem being addressed, the main contribution, and the intended application domain. "
+            "If something is truly not present or cannot be reasonably inferred, "
+            "say you do not know. Do not hallucinate."
+        )
         
-        system_prompt = "You are a research assistant. Answer based on context."
-        user_prompt = f"Context:\n{context_text}\n\nQuestion: {request.question}"
-
-        answer_text = generate_response(system_prompt, user_prompt, temperature=0.5)
+        user_prompt = f"Paper Content:\n{context_text}\n\nQuestion: {request.question}\n\nAnswer based ONLY on the content above:"
         
-        print(f"[{time.time()}] DEBUG: Gemini response received", flush=True)
-        print(f"[{time.time()}] DEBUG: Total time: {time.time() - start_time}s", flush=True)
+        response_text = generate_response(system_prompt, user_prompt)
+        
+        print("DEBUG: Gemini response received")
         
         return {
-            "answer": answer_text,
+            "answer": response_text,
             "sources": [c['chunk_text'][:200] + "..." for c in similar_chunks[:3]]
         }
 
@@ -239,10 +241,4 @@ async def chat(
         import traceback
         traceback.print_exc()
         logger.error(f"Chat error: {str(e)}")
-        error_str = str(e)
-        if "429" in error_str or "ResourceExhausted" in error_str or "TooManyRequests" in error_str:
-            raise HTTPException(
-                status_code=429,
-                detail="Gemini API rate limit reached. Please wait a minute and try again."
-            )
         raise HTTPException(status_code=500, detail=str(e))
