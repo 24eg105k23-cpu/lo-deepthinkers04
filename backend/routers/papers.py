@@ -16,7 +16,7 @@ class SummarizePayload(BaseModel):
 router = APIRouter(prefix="/papers", tags=["Papers"])
 
 @router.post("/summarize")
-async def summarize(payload: SummarizePayload):
+def summarize(payload: SummarizePayload):
     summary = summarize_paper(payload.title, payload.abstract)
     return {"summary": summary}
 

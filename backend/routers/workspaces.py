@@ -128,7 +128,7 @@ def get_workspace_papers(workspace_id: str, user: User = Depends(get_current_use
 
 
 @router.post("/{workspace_id}/papers")
-async def add_paper_to_workspace(
+def add_paper_to_workspace(
     workspace_id: str, 
     paper: PaperPayload, 
     user: User = Depends(get_current_user)

@@ -120,7 +120,7 @@ class UploadResponse(BaseModel):
     message: str
 
 @router.post("/upload", response_model=UploadResponse)
-async def upload_document(
+def upload_document(
     workspace_id: str,
     file: UploadFile = File(...),
     user: User = Depends(get_current_user)
@@ -132,7 +132,7 @@ async def upload_document(
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
     
     try:
-        content = await file.read()
+        content = file.file.read()
         full_text, abstract = load_paper_from_bytes(content)
         
         chunks = prepare_chunks(full_text, abstract)
@@ -158,7 +158,7 @@ async def upload_document(
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/chat")
-async def chat(
+def chat(
     request: ChatRequest,
     user: User = Depends(get_current_user)
 ):

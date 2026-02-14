@@ -13,7 +13,7 @@ class User(BaseModel):
     email: str | None = None
     workspace_id: str | None = None  # To be populated from metadata or context
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:
+def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:
     """
     Verify JWT token using Supabase Auth and return user.
     """
