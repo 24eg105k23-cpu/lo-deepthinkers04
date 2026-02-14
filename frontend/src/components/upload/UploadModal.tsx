@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { API_URL } from '@/lib/utils';
 import {
     Dialog,
     DialogContent,
@@ -52,7 +53,7 @@ const UploadModal = ({ open, onOpenChange, defaultWorkspaceId }: UploadModalProp
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) return;
 
-            const res = await fetch('http://127.0.0.1:8000/workspaces/', {
+            const res = await fetch(`${API_URL}/workspaces/`, {
                 headers: { 'Authorization': `Bearer ${session.access_token}` }
             });
             if (res.ok) {
@@ -107,7 +108,7 @@ const UploadModal = ({ open, onOpenChange, defaultWorkspaceId }: UploadModalProp
                 ));
             }, 500);
 
-            const res = await fetch(`http://127.0.0.1:8000/rag/upload?workspace_id=${selectedWorkspaceId}`, {
+            const res = await fetch(`${API_URL}/rag/upload?workspace_id=${selectedWorkspaceId}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${session.access_token}`

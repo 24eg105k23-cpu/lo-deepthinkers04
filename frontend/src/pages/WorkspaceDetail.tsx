@@ -10,7 +10,7 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { cn } from '@/lib/utils';
+import { cn, API_URL } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import ChatInterface from '@/components/chat/ChatInterface';
@@ -39,7 +39,7 @@ const WorkspaceDetail = () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session || !id) return;
 
-            const res = await fetch(`http://127.0.0.1:8000/workspaces/${id}`, {
+            const res = await fetch(`${API_URL}/workspaces/${id}`, {
                 headers: { 'Authorization': `Bearer ${session.access_token}` }
             });
             if (res.ok) {
@@ -57,7 +57,7 @@ const WorkspaceDetail = () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session || !id) return;
 
-            const res = await fetch(`http://127.0.0.1:8000/workspaces/${id}/papers`, {
+            const res = await fetch(`${API_URL}/workspaces/${id}/papers`, {
                 headers: { 'Authorization': `Bearer ${session.access_token}` }
             });
 
@@ -79,7 +79,7 @@ const WorkspaceDetail = () => {
             setIsSearching(true);
             setHasSearched(true);
             const res = await fetch(
-                `http://127.0.0.1:8000/papers/search?query=${encodeURIComponent(searchQuery)}`
+                `${API_URL}/papers/search?query=${encodeURIComponent(searchQuery)}`
             );
             const data = await res.json();
 
@@ -118,7 +118,7 @@ const WorkspaceDetail = () => {
             }
 
             console.log(`🔵 [handleAddPaper] Sending POST to /workspaces/${id}/papers`);
-            const res = await fetch(`http://127.0.0.1:8000/workspaces/${id}/papers`, {
+            const res = await fetch(`${API_URL}/workspaces/${id}/papers`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -154,7 +154,7 @@ const WorkspaceDetail = () => {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session || !id) return;
 
-            const res = await fetch(`http://127.0.0.1:8000/workspaces/${id}/papers/${paperId}`, {
+            const res = await fetch(`${API_URL}/workspaces/${id}/papers/${paperId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${session.access_token}`
@@ -183,7 +183,7 @@ const WorkspaceDetail = () => {
                 description: "Analysing content for AI chat...",
             });
 
-            const res = await fetch(`http://127.0.0.1:8000/chat/process-paper/${paperId}`, {
+            const res = await fetch(`${API_URL}/chat/process-paper/${paperId}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${session.access_token}`

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
+import { cn, API_URL } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import ReactMarkdown from 'react-markdown';
 
@@ -56,7 +56,7 @@ const ChatInterface = ({ workspaceId: propWorkspaceId }: ChatInterfaceProps) => 
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const res = await fetch('http://127.0.0.1:8000/workspaces/', {
+      const res = await fetch(`${API_URL}/workspaces/`, {
         headers: { 'Authorization': `Bearer ${session.access_token}` }
       });
       if (res.ok) {
@@ -92,7 +92,7 @@ const ChatInterface = ({ workspaceId: propWorkspaceId }: ChatInterfaceProps) => 
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
-      const response = await fetch('http://127.0.0.1:8000/rag/chat', {
+      const response = await fetch(`${API_URL}/rag/chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
