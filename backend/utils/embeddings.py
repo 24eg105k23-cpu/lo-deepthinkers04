@@ -1,4 +1,4 @@
-from sentence_transformers import SentenceTransformer
+# from sentence_transformers import SentenceTransformer
 import logging
 
 logger = logging.getLogger(__name__)
@@ -11,6 +11,7 @@ class LazyEmbedder:
     @property
     def model(self):
         if self._model is None:
+            from sentence_transformers import SentenceTransformer
             logger.info("Loading embedding model...")
             self._model = SentenceTransformer('all-MiniLM-L6-v2')
             logger.info("Embedding model loaded.")

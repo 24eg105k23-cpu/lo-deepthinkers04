@@ -2,7 +2,7 @@ import os
 import time
 import logging
 import traceback
-from google import genai
+# from google import genai
 from dotenv import load_dotenv
 
 # Setup logger
@@ -18,6 +18,7 @@ def generate_response(system_prompt: str, user_prompt: str):
         if not api_key:
             raise ValueError("GOOGLE_API_KEY or GEMINI_API_KEY not found in environment variables")
             
+        from google import genai
         c = genai.Client(api_key=api_key)
         
         combined_prompt = f"{system_prompt}\n\nUser Question: {user_prompt}"
