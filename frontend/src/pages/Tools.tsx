@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_URL } from '@/lib/utils';
 import {
   FileText,
   Lightbulb,
@@ -93,7 +94,7 @@ const Tools = () => {
     if (!paper) return '';
 
     try {
-      const res = await fetch('http://localhost:8000/papers/summarize', {
+      const res = await fetch(`${API_URL}/papers/summarize`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

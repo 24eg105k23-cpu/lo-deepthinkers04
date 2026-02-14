@@ -1,4 +1,5 @@
 import Header from '@/components/layout/Header';
+import { API_URL } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -87,7 +88,7 @@ const Workspaces = () => {
         return;
       }
 
-      const res = await fetch('http://localhost:8000/workspaces/', {
+      const res = await fetch(`${API_URL}/workspaces/`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`
         }
@@ -117,7 +118,7 @@ const Workspaces = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
-      const res = await fetch('http://localhost:8000/workspaces/', {
+      const res = await fetch(`${API_URL}/workspaces/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -168,7 +169,7 @@ const Workspaces = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const res = await fetch('http://localhost:8000/workspaces/user/papers', {
+      const res = await fetch(`${API_URL}/workspaces/user/papers`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`
         }
@@ -224,7 +225,7 @@ const Workspaces = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
 
-        const res = await fetch(`http://localhost:8000/workspaces/${docToDelete.workspace_id}/papers/${docToDelete.id}`, {
+        const res = await fetch(`${API_URL}/workspaces/${docToDelete.workspace_id}/papers/${docToDelete.id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${session.access_token}`

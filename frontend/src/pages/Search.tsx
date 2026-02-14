@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_URL } from '@/lib/utils';
 import { Search as SearchIcon, Filter, SlidersHorizontal, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -104,7 +105,7 @@ const Search = () => {
       setIsSearching(true);
 
       const res = await fetch(
-        `http://localhost:8000/papers/search?query=${encodeURIComponent(query)}`
+        `${API_URL}/papers/search?query=${encodeURIComponent(query)}`
       );
 
       const data = await res.json();
